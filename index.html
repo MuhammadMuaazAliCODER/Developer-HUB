@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scope and Lifetime of Variables - Code With Muaaz</title>
+    <link rel="shortcut icon" href="https://codewithmuaaz.online/Favicon.ico" type="image/x-icon">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .pdf-container {
+            width: 100%;
+            max-width: 210mm;
+            min-height: 297mm;
+            background: white;
+            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Watermark */
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            color: rgba(26, 188, 156, 0.03);
+            font-weight: 700;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* Header Banner */
+        .header-banner {
+            background: linear-gradient(135deg, #1abc9c 0%, #3498db 50%, #667eea 100%);
+            padding: 40px;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            animation: float 20s linear infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(30px, 30px); }
+        }
+        
+        .author-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .author-pic {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .author-info h3 {
+            font-size: 18px;
+            margin-bottom: 2px;
+        }
+        
+        .author-info p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+        
+        /* Main Content */
+        .main-content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 35px;
+        }
+        
+        .section-title {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 3px solid #1abc9c;
+            display: inline-block;
+        }
+        
+        .intro-box {
+            background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #00bcd4;
+            margin-bottom: 25px;
+        }
+        
+        .concept-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 25px 0;
+        }
+        
+        .concept-card {
+            background: white;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.1);
+            transition: transform 0.3s;
+        }
+        
+        .concept-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.2);
+        }
+        
+        .concept-card h3 {
+            color: #2980b9;
+            font-size: 18px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .icon {
+            font-size: 24px;
+        }
+        
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            overflow-x: auto;
+            margin: 15px 0;
+            border-left: 4px solid #1abc9c;
+        }
+        
+        .keyword { color: #e74c3c; }
+        .function { color: #f39c12; }
+        .comment { color: #95a5a6; font-style: italic; }
+        .string { color: #2ecc71; }
+        
+        .info-box {
+            background: #fff9e6;
+            border-left: 5px solid #f39c12;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .info-box strong {
+            color: #d68910;
+        }
+        
+        .diagram {
+            background: white;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .scope-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .scope-level {
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid;
+            text-align: left;
+        }
+        
+        .level-1 { background: #e8f8f5; border-color: #1abc9c; }
+        .level-2 { background: #ebf5fb; border-color: #3498db; margin-left: 30px; }
+        .level-3 { background: #fef5e7; border-color: #f39c12; margin-left: 60px; }
+        
+        .exercise-box {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .exercise-box h3 {
+            color: #d63031;
+            margin-bottom: 15px;
+        }
+        
+        .exercise-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-left: 4px solid #e17055;
+        }
+        
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 25px 40px;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .version-badge {
+            background: #1abc9c;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .pdf-container {
+                min-height: auto;
+            }
+            
+            .header-banner {
+                padding: 25px 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .subtitle {
+                font-size: 14px;
+            }
+            
+            .author-pic {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .author-info h3 {
+                font-size: 16px;
+            }
+            
+            .author-info p {
+                font-size: 11px;
+            }
+            
+            .main-content {
+                padding: 25px 20px;
+            }
+            
+            .section-title {
+                font-size: 20px;
+            }
+            
+            .concept-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .concept-card {
+                padding: 15px;
+            }
+            
+            .code-block {
+                font-size: 11px;
+                padding: 15px;
+                overflow-x: auto;
+            }
+            
+            .watermark {
+                font-size: 50px;
+            }
+            
+            .footer {
+                padding: 20px;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .scope-level.level-2 {
+                margin-left: 15px;
+            }
+            
+            .scope-level.level-3 {
+                margin-left: 30px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 20px;
+            }
+            
+            .section-title {
+                font-size: 18px;
+            }
+            
+            .main-content {
+                padding: 20px 15px;
+            }
+            
+            .code-block {
+                font-size: 10px;
+                padding: 12px;
+            }
+            
+            .concept-card h3 {
+                font-size: 16px;
+            }
+            
+            .watermark {
+                font-size: 40px;
+            }
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .pdf-container {
+                box-shadow: none;
+                width: 100%;
+                max-width: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="pdf-container">
+        <div class="watermark">Code With Muaaz</div>
+        
+        <div class="content">
+            <!-- Header -->
+            <div class="header-banner">
+                <div class="author-section">
+                    <img src="https://codewithmuaaz.online/Favicon.ico" alt="Author" class="author-pic">
+                    <div class="author-info">
+                        <h3>Muhammad Muaaz Ali</h3>
+                        <p>Full Stack Developer</p>
+                    </div>
+                </div>
+                <h1>📘 Scope and Lifetime of Variables</h1>
+                <p class="subtitle">An Educational Study Sheet for Programming Foundations</p>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Introduction -->
+                <div class="section">
+                    <h2 class="section-title">🎯 Introduction</h2>
+                    <div class="intro-box">
+                        <p><strong>Scope</strong> determines where a variable can be accessed in your code, while <strong>Lifetime</strong> determines how long a variable exists in memory. Understanding these concepts is crucial for writing efficient and bug-free C++ programs!</p>
+                    </div>
+                </div>
+                
+                <!-- Key Concepts -->
+                <div class="section">
+                    <h2 class="section-title">🔑 Key Concepts</h2>
+                    <div class="concept-grid">
+                        <div class="concept-card">
+                            <h3><span class="icon">🌍</span>Global Scope</h3>
+                            <p>Variables declared outside all functions. Accessible throughout the entire program.</p>
+                        </div>
+                        <div class="concept-card">
+                            <h3><span class="icon">🏠</span>Local Scope</h3>
+                            <p>Variables declared inside functions or blocks. Only accessible within that context.</p>
+                        </div>
+                        <div class="concept-card">
+                            <h3><span class="icon">⏰</span>Automatic Lifetime</h3>
+                            <p>Variables created when block starts, destroyed when block ends.</p>
+                        </div>
+                        <div class="concept-card">
+                            <h3><span class="icon">🔒</span>Static Lifetime</h3>
+                            <p>Variables that persist throughout program execution.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Global vs Local -->
+                <div class="section">
+                    <h2 class="section-title">💻 Global vs Local Variables</h2>
+                    
+<div class="code-block"><span class="comment">// Global Variable</span>
+<span class="keyword">int</span> globalVar = <span class="string">100</span>;
+
+<span class="keyword">void</span> <span class="function">displayGlobal</span>() {
+    cout &lt;&lt; <span class="string">"Global: "</span> &lt;&lt; globalVar; <span class="comment">// ✅ Accessible</span>
+}
+
+<span class="keyword">int</span> <span class="function">main</span>() {
+    <span class="comment">// Local Variable</span>
+    <span class="keyword">int</span> localVar = <span class="string">50</span>;
+    
+    cout &lt;&lt; globalVar;  <span class="comment">// ✅ Global accessible</span>
+    cout &lt;&lt; localVar;   <span class="comment">// ✅ Local accessible</span>
+    
+    <span class="function">displayGlobal</span>();      <span class="comment">// ✅ Works</span>
+    <span class="comment">// cout << localVar; // ❌ Error in displayGlobal()</span>
+    
+    <span class="keyword">return</span> <span class="string">0</span>;
+}</div>
+                    
+                    <div class="info-box">
+                        <strong>💡 Best Practice:</strong> Minimize use of global variables. They can lead to unexpected behavior and make debugging difficult!
+                    </div>
+                </div>
+                
+                <!-- Scope Visualization -->
+                <div class="section">
+                    <h2 class="section-title">📊 Scope Visualization</h2>
+                    <div class="diagram">
+                        <h3 style="color: #2c3e50; margin-bottom: 15px;">Variable Accessibility Levels</h3>
+                        <div class="scope-visual">
+                            <div class="scope-level level-1">
+                                <strong>🌍 Global Scope</strong> - Accessible everywhere
+                            </div>
+                            <div class="scope-level level-2">
+                                <strong>🏠 Function Scope</strong> - Accessible in function only
+                            </div>
+                            <div class="scope-level level-3">
+                                <strong>📦 Block Scope</strong> - Accessible in block { } only
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Block Scope Example -->
+                <div class="section">
+                    <h2 class="section-title">📦 Block Scope in Action</h2>
+                    
+<div class="code-block"><span class="keyword">int</span> <span class="function">main</span>() {
+    <span class="keyword">int</span> x = <span class="string">10</span>;  <span class="comment">// Function scope</span>
+    
+    <span class="keyword">if</span> (x &gt; <span class="string">5</span>) {
+        <span class="keyword">int</span> y = <span class="string">20</span>;  <span class="comment">// Block scope</span>
+        cout &lt;&lt; x;      <span class="comment">// ✅ x accessible</span>
+        cout &lt;&lt; y;      <span class="comment">// ✅ y accessible</span>
+    }
+    
+    cout &lt;&lt; x;          <span class="comment">// ✅ x still accessible</span>
+    <span class="comment">// cout << y;      // ❌ Error: y out of scope</span>
+    
+    <span class="keyword">return</span> <span class="string">0</span>;
+}</div>
+                </div>
+                
+                <!-- Static Variables -->
+                <div class="section">
+                    <h2 class="section-title">🔒 Static Variables - Persistent Lifetime</h2>
+                    
+<div class="code-block"><span class="keyword">void</span> <span class="function">counter</span>() {
+    <span class="keyword">static int</span> count = <span class="string">0</span>;  <span class="comment">// Initialized once</span>
+    count++;
+    cout &lt;&lt; <span class="string">"Count: "</span> &lt;&lt; count &lt;&lt; endl;
+}
+
+<span class="keyword">int</span> <span class="function">main</span>() {
+    <span class="function">counter</span>();  <span class="comment">// Output: Count: 1</span>
+    <span class="function">counter</span>();  <span class="comment">// Output: Count: 2</span>
+    <span class="function">counter</span>();  <span class="comment">// Output: Count: 3</span>
+    
+    <span class="keyword">return</span> <span class="string">0</span>;
+}</div>
+                    
+                    <div class="info-box">
+                        <strong>🎯 Key Point:</strong> Static variables retain their value between function calls. They're initialized only once!
+                    </div>
+                </div>
+                
+                <!-- Real-World Analogy -->
+                <div class="section">
+                    <h2 class="section-title">🌟 Real-World Analogy</h2>
+                    <div class="diagram">
+                        <h3 style="color: #2c3e50; margin-bottom: 10px;">Think of Scope Like a Building 🏢</h3>
+                        <div style="text-align: left; padding: 15px;">
+                            <p><strong>🌍 Global Variables</strong> = Public Park - Everyone can access</p>
+                            <p style="margin-top: 10px;"><strong>🏠 Function Variables</strong> = Your Home - Only family members can access</p>
+                            <p style="margin-top: 10px;"><strong>📦 Block Variables</strong> = Your Bedroom - Only you can access</p>
+                            <p style="margin-top: 10px;"><strong>🔒 Static Variables</strong> = Storage Unit - Remains even when you leave</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Practice Exercises -->
+                <div class="section">
+                    <h2 class="section-title">✏️ Practice Exercises</h2>
+                    <div class="exercise-box">
+                        <h3>🧠 Test Your Understanding!</h3>
+                        <div class="exercise-item">
+                            <strong>Exercise 1:</strong> Write a function that uses a static variable to count how many times it's been called.
+                        </div>
+                        <div class="exercise-item">
+                            <strong>Exercise 2:</strong> Create a program demonstrating global, local, and block scope with meaningful variable names.
+                        </div>
+                        <div class="exercise-item">
+                            <strong>Exercise 3:</strong> Explain what happens when a local variable has the same name as a global variable.
+                        </div>
+                        <div class="exercise-item">
+                            <strong>Exercise 4:</strong> Write code showing how lifetime differs between automatic and static variables.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Key Takeaways -->
+                <div class="section">
+                    <h2 class="section-title">🎓 Key Takeaways</h2>
+                    <div style="background: linear-gradient(135deg, #e8f8f5 0%, #d1f2eb 100%); padding: 20px; border-radius: 12px; border-left: 5px solid #1abc9c;">
+                        <p><strong>✅ Scope:</strong> Where a variable can be accessed (global, local, block)</p>
+                        <p style="margin-top: 12px;"><strong>✅ Lifetime:</strong> How long a variable exists (automatic vs static)</p>
+                        <p style="margin-top: 12px;"><strong>✅ Best Practice:</strong> Use the narrowest scope possible</p>
+                        <p style="margin-top: 12px;"><strong>✅ Static:</strong> Retains value between function calls</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-content">
+                    <div>
+                        <div><strong>Created by Code With Muaaz</strong></div>
+                        <div style="margin-top: 5px;">Copyright © Code With Muaaz 2025</div>
+                    </div>
+                    <div class="version-badge">Educational Release v1.0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: 20px; color: white;">
+        <button onclick="window.print()" style="background: linear-gradient(135deg, #1abc9c 0%, #3498db 100%); color: white; border: none; padding: 15px 40px; font-size: 16px; border-radius: 25px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+            📥 Download PDF
+        </button>
+    </div>
+</body>
+</html>
